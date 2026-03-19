@@ -1,6 +1,7 @@
 #import asyncio
 import aiohttp
 import time
+from ARUMUZIC.clients import bot, assistant, call
 from urllib.parse import quote
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
