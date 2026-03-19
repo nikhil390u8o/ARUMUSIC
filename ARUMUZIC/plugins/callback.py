@@ -1,10 +1,14 @@
-#plugins/callback.py
-
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-@bot.on_callback_query()
-async def cb_handler(_, query):
+# IMPORTANT: Inhe mangwana padega varna error aayega
+from main import call  
+import config 
+# Agar play_next doosri file mein hai toh use import karein:
+# from ARUMUZIC.plugins.play import play_next 
+
+@Client.on_callback_query() # 👈 Yahan @bot ki jagah @Client hoga
+async def cb_handler(client, query: CallbackQuery): # 👈 '_' ki jagah 'client' likho
     chat_id = query.message.chat.id
     data = query.data
 
@@ -12,7 +16,7 @@ async def cb_handler(_, query):
     if data == "help_menu":
         help_text = (
             "<b> ʙᴏᴛ ʜᴇʟᴘ ᴍᴇɴᴜ</b>\n\n"
-            "<b>/play</b> [ꜱᴏɴɢ ɴᴀᴍᴇ]</b>\n"  
+            "<b>/play</b> [ꜱᴏɴɢ ɴᴀᴍᴇ]\n"  
             "<b>/ping</b> - Stats check"
         )
         await query.message.edit_caption(
@@ -30,15 +34,15 @@ async def cb_handler(_, query):
         )
 
     elif data == "back_to_start":
-        bot_me = await bot.get_me()
+        # bot_me nikalne ka sahi tareeka plugin mein:
+        bot_me = await client.get_me() 
         text = (
-        "<b>╔══════════════════╗</b>\n"
-        "<b>   🎵 ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ 🎵   </b>\n"
-        "<b>╚══════════════════╝</b>\n\n"
-        "<b>👋 ʜᴇʟʟᴏ! ɪ ᴀᴍ ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ</b>\n"
-        "<b>ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ.</b>\n\n"
-        "✨ <b>ᴍᴀᴅᴇ ᴡɪᴛʜ ❤️ ʙʏ:</b> <a href='https://t.me/sxyaru'>sxyaru</a>"
-       )
+            "<b>╔══════════════════╗</b>\n"
+            "<b>   🎵 ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ 🎵   </b>\n"
+            "<b>╚══════════════════╝</b>\n\n"
+            "<b>👋 ʜᴇʟʟᴏ! ɪ ᴀᴍ ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ</b>\n"
+            "<b>ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ.</b>"
+        )
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("❓ ʜᴇʟᴘ", callback_data="help_menu"), InlineKeyboardButton("📂 ʀᴇᴘᴏ", callback_data="repo_menu")],
             [InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="https://t.me/sxyaru"), InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/your_channel")],
@@ -46,7 +50,7 @@ async def cb_handler(_, query):
         ])
         await query.message.edit_caption(caption=text, reply_markup=buttons)
 
-    # --- Play Music Controls (Photo Buttons) ---
+    # --- Play Music Controls ---
     elif data == "pause_cb":
         try:
             await call.pause_stream(chat_id)
@@ -63,10 +67,9 @@ async def cb_handler(_, query):
 
     elif data == "skip_cb":
         try:
-            # Skip logic (Current song pop and play next)
-            if chat_id in queues:
-                queues[chat_id].pop(0)
-            await play_next(chat_id)
+            if chat_id in config.queues: # 👈 config.queues use karein
+                config.queues[chat_id].pop(0)
+            # await play_next(chat_id) # Iske liye play_next import hona chahiye upar
             await query.answer("Skipped ⏭")
         except:
             await query.answer("Nothing to skip!", show_alert=True)
@@ -74,23 +77,15 @@ async def cb_handler(_, query):
     elif data == "stop_cb":
         try:
             await call.leave_group_call(chat_id)
-            queues.pop(chat_id, None)
+            config.queues.pop(chat_id, None)
             await query.message.delete()
             await query.answer("Stopped & Left VC ⏹")
         except:
             await query.answer("Assistant not in VC!", show_alert=True)
 
-    # --- Advanced Controls (Seek & Replay) ---
+    # --- Seek Logic ---
     elif data == "seek_forward":
         await query.answer("Seeking +20s... ⏭")
-        # Note: Seek requires proper frame support in PyTgCalls
 
     elif data == "seek_back":
         await query.answer("Seeking -20s... ⏮")
-
-    elif data == "replay_cb":
-        try:
-            await play_next(chat_id)
-            await query.answer("Replaying... ↺")
-        except:
-            await query.answer("Error replaying!", show_alert=True)
