@@ -134,15 +134,37 @@ async def play_cmd(client, msg: Message):
 
     # 4. UI
     btn_prog = gen_btn_progressbar(duration, 0)
-    text = f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n<b>‣ Tɪᴛʟᴇ :</b> {title}\n<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {user_name}"
+    text = (
+        f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
+        f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
+        f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)} ᴍs</code>\n"
+        f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+        f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ᴊɪᴏsᴀᴠᴀɴ</b>\n"
+        f"<b>‣ ᴀᴘɪ ʙʏ: <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
+        f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ: <a herf='href=https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
+    )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton(text=btn_prog, callback_data="prog_update")],
         [
+            # Row 1: Progress Bar Button (10 blocks)
+            InlineKeyboardButton(text=btn_prog, callback_data="prog_update")
+        ],
+        [
+            # Row 2: 4 Buttons (Isse buttons baraber 'Small' dikhenge)
             InlineKeyboardButton("▷", callback_data="resume_cb"),
             InlineKeyboardButton("Ⅱ", callback_data="pause_cb"),
             InlineKeyboardButton("⏭", callback_data="skip_cb"),
             InlineKeyboardButton("▢", callback_data="stop_cb")
+        ],
+        [
+            # Row 3: 3 Buttons
+            InlineKeyboardButton("⏮ -20s", callback_data="seek_back"),
+            InlineKeyboardButton("↺", callback_data="replay_cb"),
+            InlineKeyboardButton("+20s ⏭", callback_data="seek_forward")
+        ],
+        [
+            InlineKeyboardButton("ᴏᴡɴᴇʀ↗", url="https://t.me/ll_PANDA_BBY_ll"),
+            InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ ↗", url="https://t.me/sxyaru")
         ]
     ])
 
