@@ -1,11 +1,9 @@
-#plugins/welcome.py
-
 import random
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.enums import ChatMemberStatus
 
+# --- Random Welcome Images ---
 WELCOME_IMAGES = [
     "https://files.catbox.moe/nacfzm.jpg",
     "https://files.catbox.moe/x4lzbx.jpg",
@@ -14,7 +12,8 @@ WELCOME_IMAGES = [
     "https://files.catbox.moe/3h3vqz.jpg",
     "https://files.catbox.moe/yah7a9.jpg"
 ]
-# --- Welcome message template ---
+
+# --- Welcome Message Template ---
 WELCOME_TEXT = """🌸✨ ──────────────────── ✨🌸  
 🎊 <b>ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴏᴜʀ ɢʀᴏᴜᴘ</b> 🎊  
   
@@ -30,17 +29,13 @@ WELCOME_TEXT = """🌸✨ ──────────────────
 🌸✨ ──────────────────── ✨🌸  
 """
 
-
-# --- Handler for new members ---
-# --- Updated Welcome Handler ---
-@bot.on_message(filters.new_chat_members & filters.group)
+@Client.on_message(filters.new_chat_members & filters.group) # 👈 @bot nahi, @Client
 async def welcome_user(client, msg: Message):
-    # Debug ke liye print (Check karo terminal mein ye print ho raha hai ya nahi)
-    print(f"New member detected in: {msg.chat.title}")
+    # Terminal mein status dikhane ke liye
+    print(f"DEBUG: New member detected in {msg.chat.title}")
 
     for user in msg.new_chat_members:
-        # Agar bot khud join kare toh welcome na kare
-        if user.is_self:
+        if user.is_self: # Bot khud join kare toh welcome skip karega
             continue
             
         try:
@@ -50,6 +45,7 @@ async def welcome_user(client, msg: Message):
             
             photo = random.choice(WELCOME_IMAGES)
             
+            # Format text with user details
             caption = WELCOME_TEXT.format(
                 name=name, 
                 user_id=user_id, 
@@ -63,6 +59,7 @@ async def welcome_user(client, msg: Message):
                 ]
             ])
 
+            # Photo send karna (client argument use karke)
             wel_msg = await client.send_photo(
                 chat_id=msg.chat.id,
                 photo=photo,
@@ -70,7 +67,7 @@ async def welcome_user(client, msg: Message):
                 reply_markup=buttons
             )
 
-            # 60 Seconds baad delete
+            # 60 Seconds baad auto-delete
             await asyncio.sleep(60)
             await wel_msg.delete()
 
