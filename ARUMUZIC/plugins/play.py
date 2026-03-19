@@ -54,7 +54,7 @@ async def update_timer(chat_id, message_id, duration):
                     config.queues[chat_id].pop(0)
                 await play_next(chat_id)
                 break
-        except Exception:
+        except:
             break
 
 # --- Core Functions ---
@@ -81,7 +81,7 @@ async def play_next(chat_id: int):
         ])
         pmp = await bot.send_photo(chat_id, photo="https://files.catbox.moe/uyum1c.jpg", caption=text, reply_markup=buttons)
         asyncio.create_task(update_timer(chat_id, pmp.id, duration))
-    except Exception as e:
+    except:
         if chat_id in config.queues:
             config.queues[chat_id].pop(0)
             await play_next(chat_id)
@@ -106,7 +106,7 @@ async def play_cmd(client, msg: Message):
             await assistant.join_chat(link)
     except: pass
 
-    # API Search with Timeout
+    # API Search
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://jio-saa-van.vercel.app/result/?query={quote(query)}", timeout=15) as r:
@@ -120,12 +120,11 @@ async def play_cmd(client, msg: Message):
     stream_url = track.get("media_url") or track.get("download_url")
     song_data = {"title": title, "url": stream_url, "duration": duration, "by": user_name}
     
-    # Initialize queue if not exists
-    if chat_id not in config.queues:
+    # --- FIXED LINE: removed (chat_id) and await ---
+    if not call.is_connected:
         config.queues[chat_id] = []
 
-    # Check connection status to clear dead queues
-    if not await call.is_connected(chat_id):
+    if chat_id not in config.queues:
         config.queues[chat_id] = []
 
     # Queue Management
@@ -157,3 +156,4 @@ async def play_cmd(client, msg: Message):
     except Exception as e:
         config.queues[chat_id] = []
         await client.send_message(chat_id, f"❌ **ᴇʀʀᴏʀ:** {e}")
+
