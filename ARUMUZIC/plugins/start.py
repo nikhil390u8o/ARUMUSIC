@@ -1,40 +1,34 @@
-#plugins/start.py
-
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-
-# ───────────── START COMMAND ─────────────
-
-@bot.on_message(filters.command("start"))
-async def start_cmd(_, msg: Message):
-    # Pehle purana message delete karo (agar ho sake)
+@Client.on_message(filters.command("start"))
+async def start_cmd(client, msg: Message):
+    # 1. User ka command delete karne ki koshish
     try:
         await msg.delete()
     except:
         pass
 
-    # Bot knamfo ek hi baar fetch kar lete hain performance ke liye
-    me = await bot.get_me()
+    # 2. Bot info fetch karna (client use karke)
+    me = await client.get_me()
     bot_name = me.first_name
     bot_username = me.username
     
     # ──────── ANIMATION START ────────
-    # 1st Phase: HEY
-    m = await bot.send_message(msg.chat.id, "<b>ʜᴇʏ...</b>")
-    await asyncio.sleep(0.8) # Thoda wait
-    
-    # 2nd Phase: HOW ARE YOU
-    await m.edit_text("<b>ʜᴏᴡ ᴀʀᴇ ʏᴏᴜ? ✨</b>")
+    # Phase 1: HEY
+    m = await client.send_message(msg.chat.id, "<code>ʜᴇʏ...</code>")
     await asyncio.sleep(0.8)
     
-    # 3rd Phase: I AM [BOTNAME] STARTING...
-    bot_name = (await bot.get_me()).first_name
-    await m.edit_text(f"<b>ɪ ᴀᴍ {bot_name} 🎵\nsᴛᴀʀᴛɪɴɢ.....</b>")
+    # Phase 2: HOW ARE YOU
+    await m.edit_text("<code>ʜᴏᴡ ᴀʀᴇ ʏᴏᴜ? ✨</code>")
+    await asyncio.sleep(0.8)
+    
+    # Phase 3: STARTING...
+    await m.edit_text(f"<code>ɪ ᴀᴍ {bot_name} 🎵\nsᴛᴀʀᴛɪɴɢ.....</code>")
     await asyncio.sleep(1.0)
     
-    # Animation khatam, ab message delete karke main menu bhejenge
+    # Animation delete
     await m.delete()
     # ──────── ANIMATION END ────────
 
@@ -56,14 +50,14 @@ async def start_cmd(_, msg: Message):
         ],
         [
             InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="https://t.me/sxyaru"),
-            InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/your_channel")
+            InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru") # Support link sahi kar di
         ],
         [
-            InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{(await bot.get_me()).username}?startgroup=true")
+            InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{bot_username}?startgroup=true")
         ]
     ])
 
-    await bot.send_photo(
+    await client.send_photo(
         msg.chat.id,
         photo=START_IMG,
         caption=text,
