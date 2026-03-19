@@ -6,8 +6,8 @@ import config # Owner ID nikalne ke liye
 
 # --- Configuration ---
 CHAT_ENABLED = [] 
-BOT_NAME = "ARU" # Aapka bot name
-BOT_USERNAME = "sxyaru" # Aapka bot username (without @)
+BOT_NAME = "aru" # Aapka bot name
+BOT_USERNAME = "ARU_xOPUSERBOT" # Aapka bot username (without @)
 
 # Owner ke liye alag prompt aur Normal users ke liye alag
 OWNER_PROMPT = "You are ARU MUSIC BOT. The user talking to you is your OWNER and CREATOR. Be very respectful, loyal, and call him 'Sir' or 'Boss'. Use Hinglish."
