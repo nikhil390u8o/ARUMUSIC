@@ -20,7 +20,7 @@ def gen_btn_progressbar(total_sec, current_sec):
     if total_sec <= 0: total_sec = 1
     percentage = min(100, max(0, (current_sec / total_sec) * 100))
     filled_blocks = int(percentage / (100 / bar_length))
-    bar = "▬" * filled_blocks + "●" + "▬" * (bar_length - filled_blocks)
+    bar = "__" * filled_blocks + "=" + "__" * (bar_length - filled_blocks)
     return f"{fmt_time(current_sec)} {bar} {fmt_time(total_sec)}"
 
 # --- Timer Logic ---
@@ -156,7 +156,7 @@ async def play_cmd(client, msg: Message):
             [InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"), InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")]
         ])
 
-        pmp = await client.send_photo(chat_id, photo="https://files.catbox.moe/uyum1c.jpg", caption=text, reply_markup=buttons)
+        pmp = await client.send_photo(chat_id, photo="https://files.catbox.moe/cu442f.jpg", caption=text, reply_markup=buttons)
         asyncio.create_task(update_timer(chat_id, pmp.id, duration))
     except Exception as e:
         await client.send_message(chat_id, f"❌ **ᴇʀʀᴏʀ:** {e}")
