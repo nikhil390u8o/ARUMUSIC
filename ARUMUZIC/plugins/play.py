@@ -1,16 +1,19 @@
 #import asyncio
+import asyncio  # 👈 Iske aage se '#' hata diya, ab ye chalega!
 import aiohttp
 import time
-from ARUMUZIC.clients import bot, assistant, call
 from urllib.parse import quote
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.enums import ChatMemberStatus
 from pytgcalls.types import AudioPiped, HighQualityAudio
 
-# IMPORTANT: Inhe mangwana padega main aur config se
-from main import bot, assistant, call 
+# IMPORTANT: Clients ko neutral file se lo taaki 'Not Started' error na aaye
+from ARUMUZIC.clients import bot, assistant, call 
 import config
+
+# --- BAAKI POORA CODE SAME RHEGA (NO CHANGES BELOW) ---
+
 
 # --- Utils (Timer functions) ---
 def fmt_time(seconds):
