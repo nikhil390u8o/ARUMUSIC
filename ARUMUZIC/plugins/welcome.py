@@ -29,13 +29,15 @@ WELCOME_TEXT = """🌸✨ ──────────────────
 🌸✨ ──────────────────── ✨🌸  
 """
 
-@bot.on_message(filters.new_chat_members & filters.group, group=10) # group=10 dala taaki dusre filters se clash na ho
+# FIXED FILTER: Hum service messages ko pakdenge
+@bot.on_message(filters.service & filters.group, group=15)
 async def welcome_user(client, msg: Message):
-    # DEBUG PRINT: Terminal mein dekho ye line aa rahi hai ya nahi
-    print(f"--- DEBUG: New Member Event in {msg.chat.title} ---")
+    # Check karo agar koi naya member aaya hai
+    if not msg.new_chat_members:
+        return
 
     for user in msg.new_chat_members:
-        if user.is_self:
+        if user.is_self: # Bot khud join kare toh skip
             continue
             
         try:
@@ -58,16 +60,19 @@ async def welcome_user(client, msg: Message):
                 ]
             ])
 
-            wel_msg = await bot.send_photo( # Yahan 'bot' use kiya direct
+            # Seedha bot instance se send karo
+            wel_msg = await bot.send_photo(
                 chat_id=msg.chat.id,
                 photo=photo,
                 caption=caption,
                 reply_markup=buttons
             )
 
+            # Auto-delete
             await asyncio.sleep(60)
             try:
                 await wel_msg.delete()
+                await msg.delete() # Join message (Service Message) bhi delete kar dega
             except:
                 pass
 
