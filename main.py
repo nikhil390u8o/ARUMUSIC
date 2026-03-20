@@ -1,9 +1,15 @@
 import asyncio
-from pyrogram import idle
-from ARUMUZIC.clients import bot, assistant, call # 👈 Clients file se import karo
+from pyrogram import idle, Client
+from ARUMUZIC.clients import bot, assistant, call 
+import config
 
 async def start_bot():
-    print("🚀 Starting ARUMUSIC Clients...")
+    print("🚀 Starting ARUMUZIC Clients...")
+    
+    # --- PLUGINS LOADING LOGIC ---
+    # Ye batata hai bot ko ki commands kahan rakhi hain
+    bot.plugins = {"root": "ARUMUZIC/plugins"} 
+    
     await bot.start()
     await assistant.start()
     await call.start()
@@ -15,8 +21,10 @@ async def start_bot():
     
     await idle()
     
+    # Stopping clients on exit
     await bot.stop()
     await assistant.stop()
+    await call.stop()
 
 if __name__ == "__main__":
     try:
