@@ -7,7 +7,7 @@ from ARUMUZIC.clients import bot # Hum is 'bot' ka use karenge
 import config
 
 # Startup fallback
-START_TIME = datetime.now()
+BOT_START_TIME = datetime.now()
 
 def get_readable_time(seconds: int) -> str:
     count = 0
