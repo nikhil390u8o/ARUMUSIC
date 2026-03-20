@@ -3,7 +3,7 @@ import psutil
 from datetime import datetime
 from pyrogram import filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from ARUMUZIC.clients import bot # Import the specific bot instance
+from ARUMUZIC.clients import bot # Hum is 'bot' ka use karenge
 import config
 
 # Global startup time
@@ -32,27 +32,27 @@ def get_readable_time(seconds: int) -> str:
     ping_time += ":".join(time_list)
     return ping_time
 
-# Yahan @bot use karo kyunki main.py mein bot.plugins set kiya hai
+# DHYAN DO: Yahan @bot.on_message hona chahiye
 @bot.on_message(filters.command("ping") & ~filters.bot)
 async def ping_cmd(client, message: Message):
     start_time = time.time()
     
-    # Initial reply
+    # Reply text
     m = await message.reply_text("<code>ᴘɪɴɢɪɴɢ..</code>")
     
-    # Latency & Uptime logic
+    # Latency calculation
     end_time = time.time()
     ping_ms = round((end_time - start_time) * 1000, 2)
     
-    # Safe Uptime check from config or local START_TIME
+    # Uptime fix
     bot_uptime = getattr(config, "BOT_START_TIME", START_TIME)
     uptime = get_readable_time(int((datetime.now() - bot_uptime).total_seconds()))
     
-    # System stats
+    # Stats
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
-    
-    caption = (
+
+    text = (
         "<b>🏓 ᴘᴏɴɢ! sᴛᴀᴛs ᴀʀᴇ ʜᴇʀᴇ</b>\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"🚀 <b>ʟᴀᴛᴇɴᴄʏ:</b> <code>{ping_ms} ms</code>\n"
@@ -62,7 +62,7 @@ async def ping_cmd(client, message: Message):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "👤 <b>ᴏᴡɴᴇʀ:</b> <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a>"
     )
-    
+
     buttons = InlineKeyboardMarkup([[
         InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru"),
         InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/ll_PANDA_BBY_ll")
@@ -72,10 +72,10 @@ async def ping_cmd(client, message: Message):
         await client.send_photo(
             message.chat.id,
             photo="https://files.catbox.moe/nacfzm.jpg",
-            caption=caption,
+            caption=text,
             reply_markup=buttons
         )
         await m.delete()
     except Exception as e:
-        print(f"Ping Error: {e}")
-        await m.edit(caption, reply_markup=buttons)
+        print(f"Ping Photo Error: {e}")
+        await m.edit(text, reply_markup=buttons)
