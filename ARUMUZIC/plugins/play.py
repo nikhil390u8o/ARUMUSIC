@@ -112,7 +112,6 @@ async def play_cmd(client, msg: Message):
             invitelink = await client.export_chat_invite_link(chat_id)
             await assistant.join_chat(invitelink)
     except Exception:
-        # Agar error aaya (matlab assistant nahi hai), tabhi join ki koshish karega
         try:
             if msg.chat.username:
                 await assistant.join_chat(msg.chat.username)
@@ -120,7 +119,6 @@ async def play_cmd(client, msg: Message):
                 invitelink = await client.export_chat_invite_link(chat_id)
                 await assistant.join_chat(invitelink)
         except Exception:
-            # Silent check: Agar assistant already in chat hai toh ye fail hoga, hum ise ignore karenge
             pass
 
     # --- API SEARCH ---
@@ -147,15 +145,8 @@ async def play_cmd(client, msg: Message):
     config.queues[chat_id].append(song_data)
     await m.delete()
 
+    # --- STREAM START LOGIC ---
     try:
-        await call.join_group_call(chat_id, AudioPiped(stream_url, HighQualityAudio()))
-        buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton(text=gen_btn_progressbar(duration, 0), callback_data="prog_update")],
-            [InlineKeyboardButton("▷", "resume_cb"), InlineKeyboardButton("Ⅱ", "pause_cb"), InlineKeyboardButton("⏭", "skip_cb"), InlineKeyboardButton("▢", "stop_cb")],
-            [InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"), InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")]
-        ])
-        pmp = await bot.send_photo(chat_id, photo="https://files.catbox.moe/cu442f.jpg", 
-                try:
         await call.join_group_call(chat_id, AudioPiped(stream_url, HighQualityAudio()))
         
         buttons = InlineKeyboardMarkup([
@@ -189,11 +180,4 @@ async def play_cmd(client, msg: Message):
         config.queues[chat_id] = []
         await bot.send_message(chat_id, f"❌ **Error:** {e}")
 
-            reply_markup=buttons)
-        asyncio.create_task(update_timer(chat_id, pmp.id, duration))
-    except Exception as e:
-        if "No active group call" in str(e):
-            return await client.send_message(chat_id, "❌ **Pehle Voice Chat start karo bhaya!**")
-        config.queues[chat_id] = []
-        await client.send_message(chat_id, f"❌ **Error:** {e}")
 
