@@ -3,6 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus, ChatAction
 from urllib.parse import quote
+from ARUMUZIC.clients import bot, assistant, call
 import config 
 
 # --- Configuration ---
