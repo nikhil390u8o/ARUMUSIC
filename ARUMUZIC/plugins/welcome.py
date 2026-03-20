@@ -1,8 +1,8 @@
 import random
 import asyncio
 from ARUMUZIC.clients import bot 
-from pyrogram import filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram import filters, enums
+from pyrogram.types import ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
 
 # --- Random Welcome Images ---
 WELCOME_IMAGES = [
@@ -29,52 +29,54 @@ WELCOME_TEXT = """🌸✨ ──────────────────
 🌸✨ ──────────────────── ✨🌸  
 """
 
-# FIXED FILTER: Hum service messages ko pakdenge
-@bot.on_message(filters.service & filters.group, group=15)
-async def welcome_user(client, msg: Message):
-    # Check karo agar koi naya member aaya hai
-    if not msg.new_chat_members:
+# NEW METHOD: Chat Member Updated logic
+@bot.on_chat_member_updated(filters.group)
+async def welcome_updated_logic(client, update: ChatMemberUpdated):
+    # Check karo agar naya member sach mein JOIN hua hai
+    if update.old_chat_member and update.old_chat_member.status != enums.ChatMemberStatus.LEFT:
+        return
+    if update.new_chat_member.status != enums.ChatMemberStatus.MEMBER:
         return
 
-    for user in msg.new_chat_members:
-        if user.is_self: # Bot khud join kare toh skip
-            continue
-            
+    # Bot khud join kare toh welcome skip
+    if update.new_chat_member.user.is_self:
+        return
+
+    try:
+        user = update.new_chat_member.user
+        name = user.first_name or "User"
+        user_id = user.id
+        chat_title = update.chat.title
+        
+        photo = random.choice(WELCOME_IMAGES)
+        
+        caption = WELCOME_TEXT.format(
+            name=name, 
+            user_id=user_id, 
+            chat_title=chat_title
+        )
+
+        buttons = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("• ᴄʜᴀɴɴᴇʟ •", url="https://t.me/sxyaru"),
+                InlineKeyboardButton("• ᴏᴡɴᴇʀ •", url="https://t.me/ll_PANDA_BBY_ll")
+            ]
+        ])
+
+        # Photo send karna
+        wel_msg = await bot.send_photo(
+            chat_id=update.chat.id,
+            photo=photo,
+            caption=caption,
+            reply_markup=buttons
+        )
+
+        # 60 Seconds baad auto-delete
+        await asyncio.sleep(60)
         try:
-            name = user.first_name or "User"
-            user_id = user.id
-            chat_title = msg.chat.title
-            
-            photo = random.choice(WELCOME_IMAGES)
-            
-            caption = WELCOME_TEXT.format(
-                name=name, 
-                user_id=user_id, 
-                chat_title=chat_title
-            )
+            await wel_msg.delete()
+        except:
+            pass
 
-            buttons = InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton("• ᴄʜᴀɴɴᴇʟ •", url="https://t.me/sxyaru"),
-                    InlineKeyboardButton("• ᴏᴡɴᴇʀ •", url="https://t.me/ll_PANDA_BBY_ll")
-                ]
-            ])
-
-            # Seedha bot instance se send karo
-            wel_msg = await bot.send_photo(
-                chat_id=msg.chat.id,
-                photo=photo,
-                caption=caption,
-                reply_markup=buttons
-            )
-
-            # Auto-delete
-            await asyncio.sleep(60)
-            try:
-                await wel_msg.delete()
-                await msg.delete() # Join message (Service Message) bhi delete kar dega
-            except:
-                pass
-
-        except Exception as e:
-            print(f"[WELCOME ERROR] {e}")
+    except Exception as e:
+        print(f"[WELCOME ERROR] {e}")
