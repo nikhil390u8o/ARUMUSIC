@@ -1,10 +1,11 @@
 import asyncio
+import random
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from ARUMUZIC.clients import bot, assistant, call
 import config
 
-# Note: Agar circular import error aaye toh is line ko skip_cb ke andar move kar dena
+# Note: Circular import se bachne ke liye
 from ARUMUZIC.plugins.play import play_next 
 
 @Client.on_callback_query()
@@ -52,7 +53,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         ])
         await query.message.edit_caption(caption=text, reply_markup=buttons)
 
-    # --- Play Music Controls ---
+    # --- Basic Music Controls ---
     elif data == "pause_cb":
         try:
             await call.pause_stream(chat_id)
@@ -67,7 +68,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         except:
             await query.answer("Nothing playing!", show_alert=True)
 
-    elif data == "skip_cb": # <-- Yahan Indentation fix kar di
+    elif data == "skip_cb":
         try:
             if chat_id in config.queues and len(config.queues[chat_id]) > 1:
                 await play_next(chat_id)
@@ -96,19 +97,49 @@ async def cb_handler(client: Client, query: CallbackQuery):
         except:
             await query.answer("Assistant not in VC!", show_alert=True)
 
-    elif data == "seek_forward":
+    # --- New Advanced Controls (As per your Player UI) ---
+    
+    elif data == "forward_cb": # +20s
         try:
             await call.seek_stream(chat_id, 20)
             await query.answer("Seeking +20s... ⏭")
         except:
-            await query.answer("Seek failed!", show_alert=True)
+            await query.answer("Seek not supported for this stream!", show_alert=True)
 
-    elif data == "seek_back":
+    elif data == "back_cb": # -20s
         try:
             await call.seek_stream(chat_id, -20) 
             await query.answer("Seeking -20s... ⏮")
         except:
-            await query.answer("Seek failed!", show_alert=True)
-            
+            await query.answer("Seek not supported for this stream!", show_alert=True)
+
+    elif data == "shuffle_cb":
+        if chat_id not in config.queues or len(config.queues[chat_id]) < 2:
+            return await query.answer("❌ Queue mein kaafi gaane nahi hain!", show_alert=True)
+        
+        # Current song ko chodh kar baki shuffle karo
+        first = config.queues[chat_id][0]
+        rest = config.queues[chat_id][1:]
+        random.shuffle(rest)
+        config.queues[chat_id] = [first] + rest
+        await query.answer("🔀 Queue Shuffled!", show_alert=True)
+
+    elif data == "replay_cb":
+        try:
+            # Re-trigger current stream from start
+            await call.seek_stream(chat_id, 0)
+            await query.answer("↺ Replaying from start...")
+        except:
+            await query.answer("❌ Replay Failed!", show_alert=True)
+
+    elif data in ["panel_cb", "stream_cb"]:
+        await query.answer("⚡ Feature coming soon in next update!", show_alert=True)
+
+    elif data == "close_cb":
+        try:
+            await query.message.delete()
+        except:
+            pass
+
     elif data == "prog_update":
         await query.answer("Updating progress...", show_alert=False)
