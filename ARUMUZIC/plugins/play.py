@@ -135,15 +135,27 @@ async def play_cmd(client, msg: Message):
     stream_url = track.get("media_url") or track.get("download_url")
     song_data = {"title": title, "url": stream_url, "duration": duration, "by": user_name}
 
-    if chat_id not in config.queues: config.queues[chat_id] = []
-
-    if len(config.queues[chat_id]) > 0:
-        config.queues[chat_id].append(song_data)
-        return await m.edit(f"<b>✅ ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ (#{len(config.queues[chat_id])-1})</b>\n🎵 **ᴛɪᴛʟᴇ:** {title}", 
-                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("▷ ᴘʟᴀʏ ɴᴏᴡ", callback_data="skip_cb")]]))
+        # --- SMART QUEUE LOGIC (Bypass if VC is Empty) ---
+    if chat_id in config.queues and len(config.queues[chat_id]) > 0:
+        # Check karo agar assistant sach mein VC mein hai
+        try:
+            # Agar assistant VC mein nahi hai (Exception aayegi), toh direct bajao
+            await call.get_call(chat_id) 
+            
+            # Agar yahan tak aaya matlab VC active hai, toh queue mein dalo
+            config.queues[chat_id].append(song_data)
+            return await m.edit(
+                f"<b>✅ ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ (#{len(config.queues[chat_id])-1})</b>\n"
+                f"🎵 **ᴛɪᴛʟᴇ:** {title}", 
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("▷ ᴘʟᴀʏ ɴᴏᴡ", callback_data="skip_cb")]])
+            )
+        except:
+            # Agar assistant VC mein nahi hai, toh purani queue saaf karo aur direct bajao
+            config.queues[chat_id] = []
 
     config.queues[chat_id].append(song_data)
     await m.delete()
+
 
     # --- STREAM START LOGIC ---
     try:
