@@ -68,11 +68,15 @@ async def play_next(chat_id: int):
     try:
         await call.change_stream(chat_id, AudioPiped(url, HighQualityAudio()))
         text = (
-            f"<b>❍ Nᴇxᴛ Sᴏɴɢ Sᴛᴀʀᴛᴇᴅ |</b>\n\n"
-            f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{url}'>{title}</a>\n"
-            f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
-            f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user}`"
-        )
+    f"<blockquote>"
+    f"<b>❍ ɴᴇxᴛ sᴏɴɢ sᴛʀᴇᴀᴍ sᴛᴀʀᴛᴇᴅ |</b>\n\n"
+    f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
+    f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
+    f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+    f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ᴊɪᴏsᴀᴠᴀɴ</b>\n"
+    f"<b>‣ ᴀᴘɪ ʙʏ : <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
+    f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ : <a href='https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
+    f"</blockquote>"
         btn_prog = gen_btn_progressbar(duration, 0)
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton(text=btn_prog, callback_data="prog_update")],
@@ -95,7 +99,7 @@ async def play_cmd(client, msg: Message):
 
     if len(msg.command) < 2: return await msg.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!**")
     query = msg.text.split(None, 1)[1].strip()
-    m = await msg.reply("🔎 <b>sᴇᴀʀᴄʜɪɴɢ...</b>")
+    m = await msg.reply("<blockquote>🔎 <b>sᴇᴀʀᴄʜɪɴɢ...</b></blockquote>")
 
     # Assistant Check
     try:
@@ -140,11 +144,17 @@ async def play_cmd(client, msg: Message):
     try:
         await call.join_group_call(chat_id, AudioPiped(stream_url, HighQualityAudio()))
         text = (
-            f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
-            f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
-            f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
-            f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`"
-        )
+    f"<blockquote>"
+    f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
+    f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
+    f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
+    f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+    f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ᴊɪᴏsᴀᴠᴀɴ</b>\n"
+    f"<b>‣ ᴀᴘɪ ʙʏ : <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
+    f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ : <a href='https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
+    f"</blockquote>"
+)
+
         btn_prog = gen_btn_progressbar(duration, 0)
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton(text=btn_prog, callback_data="prog_update")],
