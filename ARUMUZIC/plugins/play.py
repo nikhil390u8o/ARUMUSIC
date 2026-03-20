@@ -4,10 +4,13 @@ import time
 from urllib.parse import quote
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.enums import ChatMemberStatus
 from pytgcalls.types import AudioPiped, HighQualityAudio
 from ARUMUZIC.clients import bot, assistant, call 
 import config
+
+# --- Configuration for Queues (Ensure this exists in config.py or here) ---
+if not hasattr(config, "queues"):
+    config.queues = {}
 
 # --- Utils ---
 def fmt_time(seconds):
@@ -27,11 +30,13 @@ def gen_btn_progressbar(total_sec, current_sec):
 async def update_timer(chat_id, message_id, duration):
     start_time = time.time()
     while True:
-        await asyncio.sleep(10)
+        await asyncio.sleep(12) # Interval thoda badhaya taaki Telegram limit na kare
         if chat_id not in config.queues or not config.queues[chat_id]:
             break
+        
         elapsed_time = min(duration, int(time.time() - start_time))
         new_prog = gen_btn_progressbar(duration, elapsed_time)
+        
         try:
             await bot.edit_message_reply_markup(
                 chat_id, message_id,
@@ -44,72 +49,57 @@ async def update_timer(chat_id, message_id, duration):
                         InlineKeyboardButton("▢", callback_data="stop_cb")
                     ],
                     [
-                        InlineKeyboardButton("ᴏᴡɴᴇʀ↗", url="https://t.me/ll_PANDA_BBY_ll"),
-                        InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ ↗", url="https://t.me/sxyaru")
+                        InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"),
+                        InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")
                     ]
                 ])
             )
-            if elapsed_time >= duration:
-                if chat_id in config.queues and len(config.queues[chat_id]) > 0:
-                    config.queues[chat_id].pop(0)
-                await play_next(chat_id)
-                break
-        except:
-            break
+        except: break
+        
+        if elapsed_time >= duration:
+            break # Loop end, automation handle karega next song
 
-# --- Core Functions ---
+# --- Play Next Function ---
 async def play_next(chat_id: int):
-    if chat_id not in config.queues or not config.queues[chat_id]:
+    if chat_id not in config.queues or len(config.queues[chat_id]) <= 1:
+        config.queues[chat_id] = []
         try: await call.leave_group_call(chat_id)
         except: pass
         return
-    song = config.queues[chat_id][0]
-    title, url, duration, user = song["title"], song["url"], song["duration"], song["by"]
+
+    config.queues[chat_id].pop(0) # Purana gaana nikalo
+    song = config.queues[chat_id][0] # Ab jo top par hai wo bajao
+    
+    title, stream_url, duration, user_name = song["title"], song["url"], song["duration"], song["by"]
+
     try:
-        await call.change_stream(chat_id, AudioPiped(url, HighQualityAudio()))
+        await call.change_stream(chat_id, AudioPiped(stream_url, HighQualityAudio()))
         text = (
-    f"<blockquote>"
-    f"<b>❍ ɴᴇxᴛ sᴏɴɢ sᴛʀᴇᴀᴍ sᴛᴀʀᴛᴇᴅ |</b>\n\n"
-    f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
-    f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
-    f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
-    f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ᴊɪᴏsᴀᴠᴀɴ</b>\n"
-    f"<b>‣ ᴀᴘɪ ʙʏ : <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
-    f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ : <a href='https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
-    f"</blockquote>"
+            f"<blockquote>"
+            f"<b>❍ ɴᴇxᴛ sᴏɴɢ sᴛʀᴇᴀᴍ sᴛᴀʀᴛᴇᴅ |</b>\n\n"
+            f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
+            f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
+            f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+            f"</blockquote>"
         )
-        btn_prog = gen_btn_progressbar(duration, 0)
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton(text=btn_prog, callback_data="prog_update")],
+            [InlineKeyboardButton(text=gen_btn_progressbar(duration, 0), callback_data="prog_update")],
             [InlineKeyboardButton("▷", "resume_cb"), InlineKeyboardButton("Ⅱ", "pause_cb"), InlineKeyboardButton("⏭", "skip_cb"), InlineKeyboardButton("▢", "stop_cb")],
             [InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"), InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")]
         ])
         pmp = await bot.send_photo(chat_id, photo="https://files.catbox.moe/uyum1c.jpg", caption=text, reply_markup=buttons)
         asyncio.create_task(update_timer(chat_id, pmp.id, duration))
     except:
-        if chat_id in config.queues:
-            config.queues[chat_id].pop(0)
-            await play_next(chat_id)
+        await play_next(chat_id)
 
 @Client.on_message(filters.command("play") & filters.group)
 async def play_cmd(client, msg: Message):
-    try: await msg.delete()
-    except: pass
     chat_id = msg.chat.id
     user_name = msg.from_user.first_name if msg.from_user else "User"
 
     if len(msg.command) < 2: return await msg.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!**")
     query = msg.text.split(None, 1)[1].strip()
     m = await msg.reply("<blockquote>🔎 <b>sᴇᴀʀᴄʜɪɴɢ...</b></blockquote>")
-
-    # Assistant Check
-    try:
-        ast_info = await assistant.get_me()
-        try: await client.get_chat_member(chat_id, ast_info.id)
-        except:
-            link = await client.export_chat_invite_link(chat_id)
-            await assistant.join_chat(link)
-    except: pass
 
     # API Search
     try:
@@ -120,51 +110,52 @@ async def play_cmd(client, msg: Message):
         return await m.edit(f"❌ **sᴇᴀʀᴄʜ ᴇʀʀᴏʀ:** `{e}`")
 
     if not data: return await m.edit("❌ **ɴᴏ ʀᴇsᴜʟᴛs ғᴏᴜɴᴅ!**")
+    
     track = data[0]
     title, duration = track.get("song"), int(track.get("duration", 0))
     stream_url = track.get("media_url") or track.get("download_url")
     song_data = {"title": title, "url": stream_url, "duration": duration, "by": user_name}
-    
-    # --- FIXED LINE: removed (chat_id) and await ---
-    if not call.is_connected:
-        config.queues[chat_id] = []
 
     if chat_id not in config.queues:
         config.queues[chat_id] = []
 
-    # Queue Management
+    # --- QUEUE CHECK ---
+    # Agar queue khali nahi hai, iska matlab gaana chal raha hai
     if len(config.queues[chat_id]) > 0:
         config.queues[chat_id].append(song_data)
+        # Yahan callback_data="skip_cb" rakha hai jo turant agla gaana bajayega
         btn_queue = InlineKeyboardMarkup([[InlineKeyboardButton("▷ ᴘʟᴀʏ ɴᴏᴡ", callback_data="skip_cb")]])
-        return await m.edit(f"✅ **ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ (ᴘᴏsɪᴛɪᴏɴ #{len(config.queues[chat_id])-1})**\n🎵 **ᴛɪᴛʟᴇ:** {title}", reply_markup=btn_queue)
+        return await m.edit(
+            f"<b>✅ ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ (ᴘᴏsɪᴛɪᴏɴ #{len(config.queues[chat_id])-1})</b>\n"
+            f"🎵 <b>ᴛɪᴛʟᴇ:</b> {title}", 
+            reply_markup=btn_queue
+        )
 
+    # Naya gaana add karo aur bajao
     config.queues[chat_id].append(song_data)
     await m.delete()
 
-    # Play Initial Song
     try:
+        # Join and Play
         await call.join_group_call(chat_id, AudioPiped(stream_url, HighQualityAudio()))
+        
         text = (
-    f"<blockquote>"
-    f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
-    f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
-    f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
-    f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
-    f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ᴊɪᴏsᴀᴠᴀɴ</b>\n"
-    f"<b>‣ ᴀᴘɪ ʙʏ : <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
-    f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ : <a href='https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
-    f"</blockquote>"
-)
+            f"<blockquote>"
+            f"<b>❍ Sᴛᴀʀᴛᴇᴅ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
+            f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{stream_url}'>{title}</a>\n"
+            f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
+            f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+            f"</blockquote>"
+        )
 
-        btn_prog = gen_btn_progressbar(duration, 0)
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton(text=btn_prog, callback_data="prog_update")],
+            [InlineKeyboardButton(text=gen_btn_progressbar(duration, 0), callback_data="prog_update")],
             [InlineKeyboardButton("▷", "resume_cb"), InlineKeyboardButton("Ⅱ", "pause_cb"), InlineKeyboardButton("⏭", "skip_cb"), InlineKeyboardButton("▢", "stop_cb")],
             [InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"), InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")]
         ])
         pmp = await client.send_photo(chat_id, photo="https://files.catbox.moe/cu442f.jpg", caption=text, reply_markup=buttons)
         asyncio.create_task(update_timer(chat_id, pmp.id, duration))
+        
     except Exception as e:
         config.queues[chat_id] = []
         await client.send_message(chat_id, f"❌ **ᴇʀʀᴏʀ:** {e}")
-
