@@ -2,11 +2,12 @@ import asyncio
 import random
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pytgcalls.types import AudioPiped, HighQualityAudio
 from ARUMUZIC.clients import bot, assistant, call
 import config
 
-# Note: Circular import se bachne ke liye
-from ARUMUZIC.plugins.play import play_next 
+# Note: Circular import se bachne ke liye functions ko call ke time import karna better hai
+# par agar yahan work kar raha hai toh rehne do.
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
@@ -39,9 +40,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
     elif data == "back_to_start":
         bot_me = await client.get_me() 
         text = (
-            "<b>╔══════════════════╗</b>\n"
-            "<b>   🎵 ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ 🎵   </b>\n"
-            "<b>╚══════════════════╝</b>\n\n"
+            "<b>╔═════════════════╗</b>\n"
+            "<b>   ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ     </b>\n"
+            "<b>╚═════════════════╝</b>\n\n"
             "<b>👋 ʜᴇʟʟᴏ! ɪ ᴀᴍ ᴀ ғᴀsᴛ & ᴘᴏᴡᴇʀғᴜʟ</b>\n"
             "<b>ᴠᴏɪᴄᴇ ᴄʜᴀᴛ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ.</b>\n\n"
             "✨ <b>ᴍᴀᴅᴇ ᴡɪᴛʜ ❤️ ʙʏ:</b> <a href='https://t.me/sxyaru'>sxyaru</a>"
@@ -69,6 +70,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.answer("Nothing playing!", show_alert=True)
 
     elif data == "skip_cb":
+        from ARUMUZIC.plugins.play import play_next # Local import safe rehta hai
         try:
             if chat_id in config.queues and len(config.queues[chat_id]) > 1:
                 await play_next(chat_id)
@@ -97,19 +99,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
         except:
             await query.answer("Assistant not in VC!", show_alert=True)
 
-    # --- New Advanced Controls (As per your Player UI) ---
-    
-    
-        # Current song ko chodh kar baki shuffle karo
-        
-
     elif data == "replay_cb":
         try:
-            # Re-trigger current stream from start
-            await call.seek_stream(chat_id, 0)
-            await query.answer("↺ Replaying from start...")
-        except:
-            await query.answer("❌ Replay Failed!", show_alert=True)
+            if chat_id in config.queues and len(config.queues[chat_id]) > 0:
+                song = config.queues[chat_id][0] 
+                stream_url = song["url"]
+                
+                # Replaying using change_stream for better stability
+                await call.change_stream(
+                    chat_id, 
+                    AudioPiped(stream_url, HighQualityAudio())
+                )
+                await query.answer("↺ Replaying from start...", show_alert=False)
+            else:
+                await query.answer("❌ Nothing in queue to replay!", show_alert=True)
+        except Exception as e:
+            await query.answer(f"❌ Replay Failed: {e}", show_alert=True)
 
     elif data in ["panel_cb", "stream_cb"]:
         await query.answer("⚡ Feature coming soon in next update!", show_alert=True)
