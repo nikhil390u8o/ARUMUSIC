@@ -1,4 +1,6 @@
 import asyncio
+import os
+import importlib
 from pyrogram import idle, Client
 from ARUMUZIC.clients import bot, assistant, call 
 import config
@@ -6,16 +8,26 @@ import config
 async def start_bot():
     print("🚀 Starting ARUMUZIC Clients...")
     
-    # --- PLUGINS LOADING LOGIC ---
-    # Ye batata hai bot ko ki commands kahan rakhi hain
-    bot.plugins = {"root": "ARUMUZIC/plugins"} 
-    
+    # --- CLIENTS START ---
     await bot.start()
     await assistant.start()
     await call.start()
-    
+
+    # --- PLUGINS AUTO-LOADER ---
+    # Ye folder ke andar ki saari files ko load karega
+    plugins_path = "ARUMUZIC/plugins"
+    if os.path.exists(plugins_path):
+        for file in os.listdir(plugins_path):
+            if file.endswith(".py") and not file.startswith("__"):
+                module_path = f"ARUMUZIC.plugins.{file[:-3]}"
+                try:
+                    importlib.import_module(module_path)
+                    print(f"✅ Loaded: {file}")
+                except Exception as e:
+                    print(f"❌ Failed to load {file}: {e}")
+
     print("---------------------------------")
-    print("✨ ARUMUSIC IS NOW ONLINE! ✨")
+    print("✨ ARUMUZIC IS NOW ONLINE! ✨")
     print("✅ ALL MODULES LOADED")
     print("---------------------------------")
     
