@@ -99,30 +99,9 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
     # --- New Advanced Controls (As per your Player UI) ---
     
-    elif data == "forward_cb": # +20s
-        try:
-            await call.seek_stream(chat_id, 20)
-            await query.answer("Seeking +20s... ⏭")
-        except:
-            await query.answer("Seek not supported for this stream!", show_alert=True)
-
-    elif data == "back_cb": # -20s
-        try:
-            await call.seek_stream(chat_id, -20) 
-            await query.answer("Seeking -20s... ⏮")
-        except:
-            await query.answer("Seek not supported for this stream!", show_alert=True)
-
-    elif data == "shuffle_cb":
-        if chat_id not in config.queues or len(config.queues[chat_id]) < 2:
-            return await query.answer("❌ Queue mein kaafi gaane nahi hain!", show_alert=True)
-        
+    
         # Current song ko chodh kar baki shuffle karo
-        first = config.queues[chat_id][0]
-        rest = config.queues[chat_id][1:]
-        random.shuffle(rest)
-        config.queues[chat_id] = [first] + rest
-        await query.answer("🔀 Queue Shuffled!", show_alert=True)
+        
 
     elif data == "replay_cb":
         try:
