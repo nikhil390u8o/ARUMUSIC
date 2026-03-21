@@ -1,4 +1,5 @@
 aiohttp
 pyrogram==2.0.106
 tgcrypto
-py-tgcalls==0.9.7
+pytgcalls[ffmpeg]==2.0.0
+
