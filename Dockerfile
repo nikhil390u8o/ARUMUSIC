@@ -1,22 +1,22 @@
 FROM python:3.10-slim
 
-# Install system dependencies (FFmpeg is must)
+# System dependencies for FFmpeg and builds
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
-    python3-dev \
     build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy and install requirements first
-COPY requirements.txt .
+# Upgrade pip first
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-# Yahan 'tgcalls' ko manually handle karne ki zaroorat nahi
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the code
+# Sabhi libraries ko manual install karo (No requirements.txt needed)
+RUN pip install --no-cache-dir pyrogram pytgcalls[ffmpeg] yt-dlp youtube-search-python beautifulsoup4 aiohttp
+
+# Baaki code copy karo
 COPY . .
 
 CMD ["python3", "main.py"]
