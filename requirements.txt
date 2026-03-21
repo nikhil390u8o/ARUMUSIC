@@ -1,6 +1,7 @@
-pyrogram
-pytgcalls[ffmpeg]==2.0.0
+ppyrogram
+pytgcalls[ffmpeg]
 yt-dlp
 youtube-search-python
 beautifulsoup4
 aiohttp
+
