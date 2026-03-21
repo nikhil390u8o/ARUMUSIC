@@ -1,23 +1,22 @@
 FROM python:3.10-slim
 
-# System basics aur FFmpeg (Isme sudo nahi lagate)
+# Install system dependencies (FFmpeg is must)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
-    curl \
     python3-dev \
-    libffi-dev \
-    libssl-dev \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Pehle requirements install karte hain taaki build fast ho
+# Copy and install requirements first
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Yahan 'tgcalls' ko manually handle karne ki zaroorat nahi
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Ab baki ka code copy karo
+# Copy the rest of the code
 COPY . .
 
 CMD ["python3", "main.py"]
