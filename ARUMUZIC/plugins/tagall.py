@@ -2,7 +2,7 @@ import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ChatMemberStatus
-
+from ARUMUZIC.clients import bot 
 @Client.on_message(filters.command(["tagall", "utag"], prefixes=["/", "!", ""]))
 async def tag_test(client: Client, message: Message):
     # Sirf ye check karne ke liye ki bot active hai
