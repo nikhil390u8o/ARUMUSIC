@@ -6,7 +6,7 @@ from pyrogram.errors import FloodWait
 
 TAG_STOP = {}
 
-@Client.on_message(filters.command(["tagall", "utag", "all"]) & filters.group)
+@Client.on_message(filters.command(["tagall", "all", "utag"]) & filters.group)
 async def tag_all_members(client, message: Message):
     chat_id = message.chat.id
 
@@ -17,10 +17,10 @@ async def tag_all_members(client, message: Message):
         user = await client.get_chat_member(chat_id, message.from_user.id)
         if user.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
             return await m.edit("❌ Only admins can use this!")
-    except Exception as e:
-        return await m.edit(f"❌ Admin check failed: {e}")
+    except:
+        return
 
-    tag_text = "ʜᴇʏ, ᴡᴀᴋᴇ ᴜᴘ!"
+    tag_text = "Hey, wake up!"
     if len(message.command) > 1:
         tag_text = message.text.split(None, 1)[1]
 
@@ -44,22 +44,22 @@ async def tag_all_members(client, message: Message):
 
         if count % 5 == 0:
             try:
-                await client.send_message(chat_id, f"📢 {tag_text}\n\n{usertxt}")
+                await message.reply(f"{tag_text}\n\n{usertxt}")
             except FloodWait as fw:
                 await asyncio.sleep(fw.value)
-                await client.send_message(chat_id, f"📢 {tag_text}\n\n{usertxt}")
+                await message.reply(f"{tag_text}\n\n{usertxt}")
 
             await asyncio.sleep(2)
             usertxt = ""
 
     if usertxt:
-        await client.send_message(chat_id, f"📢 {tag_text}\n\n{usertxt}")
+        await message.reply(f"{tag_text}\n\n{usertxt}")
 
     await m.delete()
-    await message.reply(f"✅ Tagging Done! Total: `{count}`")
+    await message.reply(f"✅ Done! Total: {count}")
 
 
-@Client.on_message(filters.command(["cancel", "stopall"]) & filters.group)
-async def stop_tagging(client, message: Message):
+@Client.on_message(filters.command(["stop", "cancel"]) & filters.group)
+async def stop_tag(client, message):
     TAG_STOP[message.chat.id] = True
-    await message.reply("⏳ Stopping TagAll...")
+    await message.reply("⏹ Stopping...")
