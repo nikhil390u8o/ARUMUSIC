@@ -5,9 +5,10 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pytgcalls.types import AudioVideoPiped, HighQualityAudio, HighQualityVideo
 from ARUMUZIC.clients import bot, call
 from urllib.parse import quote
-import config
 
-# --- SIMPLE BUTTONS ---
+# Token fixed as per your data
+NUB_TOKEN = "pePKYb9ltY"
+
 def get_v_buttons():
     return InlineKeyboardMarkup([
         [
@@ -26,28 +27,43 @@ async def vplay_cmd(client, message: Message):
     user_name = message.from_user.first_name if message.from_user else "User"
     
     if len(message.command) < 2:
-        return await message.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!**")
+        return await message.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!** (Example: /vplay starboy)")
     
     query = message.text.split(None, 1)[1].strip()
-    m = await message.reply("<blockquote>🎬 <b>ғᴇᴛᴄʜɪɴɢ...</b></blockquote>")
+    m = await message.reply("<blockquote>🎬 <b>sᴇᴀʀᴄʜɪɴɢ...</b></blockquote>")
 
-    # API Token directly using for safety
-    api_url = f"http://api.nubcoder.com/info?token=pePKYb9ltY&q={quote(query)}"
+    # API URL for /info (Direct Search + Stream)
+    api_url = f"http://api.nubcoder.com/info?token={NUB_TOKEN}&q={quote(query)}"
     
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url, timeout=20) as resp:
                 data = await resp.json()
                 
+        # --- DEBUGGING & FIXING ---
+        # Agar /info directly link nahi deta, toh data check karo
         if not data or "link" not in data:
-            return await m.edit("❌ **ɴᴏᴛ ғᴏᴜɴᴅ!**")
+            # TRYING BACKUP SEARCH (If direct info fails)
+            search_url = f"http://api.nubcoder.com/search?q={quote(query)}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(search_url) as s_resp:
+                    s_data = await s_resp.json()
+                    if s_data and len(s_data) > 0:
+                        # Pehla result uthao aur uska stream URL lo
+                        video_id = s_data[0].get("id")
+                        api_url = f"http://api.nubcoder.com/info?token={NUB_TOKEN}&q={video_id}"
+                        async with session.get(api_url) as final_resp:
+                            data = await final_resp.json()
+
+        if not data or "link" not in data:
+            return await m.edit("❌ **sᴛʀᴇᴀᴍ ʟɪɴᴋ ɴᴏᴛ ғᴏᴜɴᴅ! ᴛʀʏ ᴀɴᴏᴛʜᴇʀ sᴏɴɢ.**")
 
         video_url = data.get("link")
         title = data.get("title", "Video")
         thumb = data.get("thumbnail") or "https://files.catbox.moe/cu442f.jpg"
 
         try:
-            # Direct Join (No Queue for now to avoid crash)
+            # Play Logic
             await call.join_group_call(
                 chat_id,
                 AudioVideoPiped(video_url, HighQualityAudio(), HighQualityVideo())
