@@ -8,7 +8,7 @@ bot = Client(
     api_id=config.API_ID,
     api_hash=config.API_HASH,
     bot_token=config.BOT_TOKEN,
-    plugins=dict(root="ARUMUZIC/plugins")
+    plugins=dict(root="ARUMUZIC.plugins")  # ✅ FIXED
 )
 
 # Assistant Client
