@@ -61,7 +61,7 @@ async def play_next(chat_id: int):
     title, stream_url, duration, user_name = song["title"], song["url"], song["duration"], song["by"]
     
     # Static Thumbnail as requested
-    thumbnail = "https://files.catbox.moe/cu442f.jpg"
+    thumbnail = "https://files.catbox.moe/8wg1qy.jpg"
 
     try:
         try:
@@ -151,7 +151,7 @@ async def play_cmd(client, msg: Message):
     stream_url = track.get("media_url") or track.get("download_url")
     
     # --- STATIC THUMBNAIL LOGIC ---
-    thumb_url = "https://files.catbox.moe/cu442f.jpg"
+    thumb_url = "https://files.catbox.moe/8wg1qy.jpg"
 
     song_data = {
         "title": title, 
