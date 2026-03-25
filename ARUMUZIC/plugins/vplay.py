@@ -6,7 +6,7 @@ from pytgcalls.types import AudioVideoPiped, HighQualityAudio, HighQualityVideo
 from ARUMUZIC.clients import bot, call
 from urllib.parse import quote
 
-# Token fixed as per your data
+# Token & API Config
 NUB_TOKEN = "pePKYb9ltY"
 
 def get_v_buttons():
@@ -27,12 +27,12 @@ async def vplay_cmd(client, message: Message):
     user_name = message.from_user.first_name if message.from_user else "User"
     
     if len(message.command) < 2:
-        return await message.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!** (Example: /vplay starboy)")
+        return await message.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!**")
     
     query = message.text.split(None, 1)[1].strip()
-    m = await message.reply("<blockquote>🎬 <b>sᴇᴀʀᴄʜɪɴɢ...</b></blockquote>")
+    m = await message.reply("<blockquote>🎬 <b>ғᴇᴛᴄʜɪɴɢ sᴛʀᴇᴀᴍ...</b></blockquote>")
 
-    # API URL for /info (Direct Search + Stream)
+    # API URL
     api_url = f"http://api.nubcoder.com/info?token={NUB_TOKEN}&q={quote(query)}"
     
     try:
@@ -40,40 +40,40 @@ async def vplay_cmd(client, message: Message):
             async with session.get(api_url, timeout=20) as resp:
                 data = await resp.json()
                 
-        # --- DEBUGGING & FIXING ---
-        # Agar /info directly link nahi deta, toh data check karo
-        if not data or "link" not in data:
-            # TRYING BACKUP SEARCH (If direct info fails)
-            search_url = f"http://api.nubcoder.com/search?q={quote(query)}"
-            async with aiohttp.ClientSession() as session:
-                async with session.get(search_url) as s_resp:
-                    s_data = await s_resp.json()
-                    if s_data and len(s_data) > 0:
-                        # Pehla result uthao aur uska stream URL lo
-                        video_id = s_data[0].get("id")
-                        api_url = f"http://api.nubcoder.com/info?token={NUB_TOKEN}&q={video_id}"
-                        async with session.get(api_url) as final_resp:
-                            data = await final_resp.json()
+        # API Response Keys Check (stream_url and thumbnail)
+        video_url = data.get("stream_url")
+        if not video_url:
+            return await m.edit("❌ **sᴛʀᴇᴀᴍ ᴜʀʟ ɴᴏᴛ ғᴏᴜɴᴅ ɪɴ ᴀᴘɪ!**")
 
-        if not data or "link" not in data:
-            return await m.edit("❌ **sᴛʀᴇᴀᴍ ʟɪɴᴋ ɴᴏᴛ ғᴏᴜɴᴅ! ᴛʀʏ ᴀɴᴏᴛʜᴇʀ sᴏɴɢ.**")
-
-        video_url = data.get("link")
-        title = data.get("title", "Video")
-        thumb = data.get("thumbnail") or "https://files.catbox.moe/cu442f.jpg"
+        title = data.get("title", "Unknown Video")
+        thumb = data.get("thumbnail") # Seedha API wala thumbnail
+        duration = data.get("duration", "00:00")
+        yt_link = data.get("youtube_link", "https://youtube.com")
 
         try:
-            # Play Logic
+            # Pytgcalls Video Streaming
             await call.join_group_call(
                 chat_id,
-                AudioVideoPiped(video_url, HighQualityAudio(), HighQualityVideo())
+                AudioVideoPiped(
+                    video_url,
+                    HighQualityAudio(),
+                    HighQualityVideo()
+                )
             )
             
             await m.delete()
+            caption = (
+                f"<b>❍ sᴛᴀʀᴛᴇᴅ ᴠɪᴅᴇᴏ sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
+                f"<b>‣ ᴛɪᴛʟᴇ :</b> <a href='{yt_link}'>{title}</a>\n"
+                f"<b>‣ ᴅᴜʀᴀᴛɪᴏɴ :</b> <code>{duration}</code>\n"
+                f"<b>‣ ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {user_name}\n"
+                f"<b>‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : ɴᴜʙᴄᴏᴅᴇʀ ᴀᴘɪ</b>"
+            )
+            
             await bot.send_photo(
                 chat_id,
                 photo=thumb,
-                caption=f"<b>🎬 sᴛᴀʀᴛᴇᴅ :</b> <a href='{video_url}'>{title}</a>\n<b>👤 ʙʏ :</b> {user_name}",
+                caption=caption,
                 reply_markup=get_v_buttons()
             )
 
@@ -85,4 +85,4 @@ async def vplay_cmd(client, message: Message):
                 await m.edit(f"❌ **ᴠᴄ ᴇʀʀᴏʀ:** `{e}`")
 
     except Exception as e:
-        await m.edit(f"❌ **ᴀᴘɪ ᴇʀʀᴏʀ:** `{e}`")
+        await m.edit(f"❌ **ᴀᴘɪ ᴇʀʀᴏʀ:** `{type(e).__name__}`")
