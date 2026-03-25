@@ -7,7 +7,7 @@ async def start_bot():
     print("🚀 Starting ARUMUZIC Clients...")
     
     # Force defining plugins path before start
-    bot.plugins = {"root": "ARUMUZIC/plugins"} 
+    bot.plugins = {"root": "ARUMUZIC.plugins"} 
     
     await bot.start()
     await assistant.start()
