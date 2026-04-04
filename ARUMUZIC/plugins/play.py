@@ -6,7 +6,8 @@ from urllib.parse import quote
 from pyrogram.enums import ChatMemberStatus
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pytgcalls.types import AudioPiped, HighQualityAudio
+from pytgcalls.types import AudioPiped, HighQualityAudio, VideoPiped, HighQualityVideo
+import yt_dlp
 from pytgcalls import PyTgCalls
 from ARUMUZIC.clients import bot, assistant, call 
 import config
@@ -208,3 +209,129 @@ async def play_cmd(client, msg: Message):
             return await bot.send_message(chat_id, "❌ **Pehle Voice Chat start karo bhaya!**")
         config.queues[chat_id] = []
         await bot.send_message(chat_id, f"❌ **Error:** {e}")
+
+# --- YT-DLP VIDEO URL FETCH ---
+def get_video_stream(query: str):
+    ydl_opts = {
+        'format': 'best[height<=720][ext=mp4]/best[height<=720]/best',
+        'noplaylist': True,
+        'quiet': True,
+        'no_warnings': True,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"ytsearch:{query}", download=False)
+        entry = info['entries'][0]
+        return {
+            "title": entry.get("title", "Unknown"),
+            "url": entry.get("url"),
+            "duration": int(entry.get("duration", 0)),
+            "thumb": entry.get("thumbnail", "https://files.catbox.moe/8wg1qy.jpg"),
+            "webpage_url": entry.get("webpage_url", "")
+        }
+
+
+# --- VPLAY COMMAND ---
+@bot.on_message(filters.command("vplay") & filters.group)
+async def vplay_cmd(client, msg: Message):
+    try: await msg.delete()
+    except: pass
+
+    chat_id = msg.chat.id
+    user_name = msg.from_user.first_name if msg.from_user else "User"
+    if len(msg.command) < 2:
+        return await msg.reply("❌ **ɢɪᴠᴇ ᴀ ǫᴜᴇʀʏ!**\n\n`/vplay Song Name`")
+
+    query = msg.text.split(None, 1)[1].strip()
+    m = await msg.reply("<blockquote>🔎 <b>sᴇᴀʀᴄʜɪɴɢ ᴠɪᴅᴇᴏ...</b></blockquote>")
+
+    # --- ASSISTANT CHECK ---
+    ast_id = (await assistant.get_me()).id
+    try:
+        ast_member = await client.get_chat_member(chat_id, ast_id)
+        if ast_member.status == ChatMemberStatus.BANNED:
+            await client.unban_chat_member(chat_id, ast_id)
+            invitelink = await client.export_chat_invite_link(chat_id)
+            await assistant.join_chat(invitelink)
+    except Exception:
+        try:
+            if msg.chat.username:
+                await assistant.join_chat(msg.chat.username)
+            else:
+                invitelink = await client.export_chat_invite_link(chat_id)
+                await assistant.join_chat(invitelink)
+        except Exception:
+            pass
+
+    # --- YT-DLP SEARCH ---
+    try:
+        loop = asyncio.get_event_loop()
+        track = await loop.run_in_executor(None, get_video_stream, query)
+    except Exception as e:
+        return await m.edit(f"❌ **Video Search Error!**\n`{e}`")
+
+    title = track["title"]
+    duration = track["duration"]
+    stream_url = track["url"]
+    thumb_url = track.get("thumb", "https://files.catbox.moe/8wg1qy.jpg")
+    yt_url = track.get("webpage_url", stream_url)
+
+    song_data = {
+        "title": title,
+        "url": stream_url,
+        "duration": duration,
+        "by": user_name,
+        "thumb": thumb_url,
+        "type": "video"
+    }
+
+    if chat_id not in config.queues:
+        config.queues[chat_id] = []
+
+    # --- SMART QUEUE ---
+    if len(config.queues[chat_id]) > 0:
+        try:
+            await call.get_call(chat_id)
+            config.queues[chat_id].append(song_data)
+            return await m.edit(
+                f"<b>✅ ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ (#{len(config.queues[chat_id])-1})</b>\n"
+                f"🎬 **ᴛɪᴛʟᴇ:** {title}",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("▷ ᴘʟᴀʏ ɴᴏᴡ", callback_data="skip_cb")]])
+            )
+        except:
+            config.queues[chat_id] = []
+
+    config.queues[chat_id].append(song_data)
+    await m.delete()
+
+    # --- VIDEO STREAM START ---
+    try:
+        await call.join_group_call(
+            chat_id,
+            VideoPiped(stream_url, HighQualityVideo())
+        )
+
+        caption_text = (
+            f"<b>❍ Sᴛᴀʀᴛᴇᴅ Vɪᴅᴇᴏ Sᴛʀᴇᴀᴍɪɴɢ |</b>\n\n"
+            f"<b>‣ Tɪᴛʟᴇ :</b> <a href='{yt_url}'>{title}</a>\n"
+            f"<b>‣ Dᴜʀᴀᴛɪᴏɴ :</b> <code>{fmt_time(duration)}</code>\n"
+            f"<b>‣ Rᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> `{user_name}`\n"
+            f"<b>‣ ʙᴏᴛ ʙᴀsᴇᴅ ᴏɴ : ᴀʀᴜ x ʏᴏᴜᴛᴜʙᴇ</b>\n"
+            f"<b>‣ ᴀᴘɪ ʙʏ: <a href='https://t.me/sxyaru'>ᴀʀᴜ × ᴀᴘɪ [ʙᴏᴛs]</a></b>\n"
+            f"<b>‣ ᴀᴘɪ ᴍᴀᴅᴇ ʙʏ: <a href='https://t.me/ll_PANDA_BBY_ll'>ᴘᴀɴᴅᴀ-ʙᴀʙʏ</a></b>"
+        )
+
+        pmp = await bot.send_photo(
+            chat_id,
+            photo=thumb_url,
+            caption=caption_text,
+            reply_markup=get_player_buttons(duration)
+        )
+
+        asyncio.create_task(update_timer(chat_id, pmp.id, duration))
+
+    except Exception as e:
+        if "No active group call" in str(e):
+            return await bot.send_message(chat_id, "❌ **Pehle Voice Chat start karo bhaya!**")
+        config.queues[chat_id] = []
+        await bot.send_message(chat_id, f"❌ **Error:** {e}")
+
