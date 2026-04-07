@@ -204,55 +204,69 @@ async def play_cmd(client, msg: Message):
 
 # --- PIPED API VIDEO SEARCH ---
 async def get_video_stream(query: str):
+    # Multiple Invidious instances - fallback system
+    instances = [
+        "https://invidious.nerdvpn.de",
+        "https://invidious.privacydev.net",
+        "https://inv.tux.pizza",
+    ]
+    
     async with aiohttp.ClientSession() as session:
-        # Step 1: Search video
-        async with session.get(
-            f"https://pipedapi.kavin.rocks/search?q={quote(query)}&filter=videos",
-            timeout=aiohttp.ClientTimeout(total=15)
-        ) as r:
-            data = await r.json()
+        for instance in instances:
+            try:
+                # Search
+                async with session.get(
+                    f"{instance}/api/v1/search?q={quote(query)}&type=video",
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as r:
+                    data = await r.json()
+                
+                if not data:
+                    continue
+                    
+                video = data[0]
+                video_id = video["videoId"]
+                title = video.get("title", "Unknown")
+                duration = int(video.get("lengthSeconds", 0))
+                thumb = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
 
-        if not data.get("items"):
-            raise Exception("No video results found!")
+                # Get streams
+                async with session.get(
+                    f"{instance}/api/v1/videos/{video_id}",
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as r:
+                    streams = await r.json()
 
-        video = data["items"][0]
-        video_id = video["url"].split("?v=")[-1]
-        title = video.get("title", "Unknown")
-        duration = int(video.get("duration", 0))
-        thumb = video.get("thumbnail", "https://files.catbox.moe/8wg1qy.jpg")
+                # Best video stream
+                video_streams = streams.get("adaptiveFormats", [])
+                selected = None
+                for quality in ["720p", "480p", "360p"]:
+                    for s in video_streams:
+                        if s.get("qualityLabel") == quality:
+                            selected = s
+                            break
+                    if selected:
+                        break
 
-        # Step 2: Get stream URL
-        async with session.get(
-            f"https://pipedapi.kavin.rocks/streams/{video_id}",
-            timeout=aiohttp.ClientTimeout(total=15)
-        ) as r:
-            streams = await r.json()
+                if not selected:
+                    video_streams = streams.get("formatStreams", [])
+                    if video_streams:
+                        selected = video_streams[0]
 
-        # Get best video stream (720p preferred)
-        video_streams = streams.get("videoStreams", [])
-        selected = None
-        for quality in ["720p", "480p", "360p"]:
-            for s in video_streams:
-                if s.get("quality") == quality and "mime" in s and "video" in s["mime"]:
-                    selected = s
-                    break
-            if selected:
-                break
+                if not selected:
+                    continue
 
-        if not selected and video_streams:
-            selected = video_streams[0]
-
-        if not selected:
-            raise Exception("No video stream found!")
-
-        return {
-            "title": title,
-            "url": selected["url"],
-            "duration": duration,
-            "thumb": thumb,
-            "webpage_url": f"https://youtube.com/watch?v={video_id}"
-        }
-
+                return {
+                    "title": title,
+                    "url": selected["url"],
+                    "duration": duration,
+                    "thumb": thumb,
+                    "webpage_url": f"https://youtube.com/watch?v={video_id}"
+                }
+            except:
+                continue
+                
+    raise Exception("Sabhi instances fail ho gaye! Baad mein try karo.")
 
 # --- VPLAY COMMAND ---
 @bot.on_message(filters.command("vplay") & filters.group)
