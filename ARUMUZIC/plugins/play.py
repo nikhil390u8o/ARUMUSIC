@@ -145,7 +145,7 @@ async def play_cmd(client, msg: Message):
     title = track.get("song", "Unknown Title")
     duration = int(track.get("duration", 0))
     stream_url = track.get("media_url") or track.get("download_url")
-    thumb_url = "https://files.catbox.moe/8wg1qy.jpg"
+    thumb_url = track.get("image", [{}])[-1].get("url", "https://files.catbox.moe/8wg1qy.jpg")
 
     song_data = {
         "title": title, 
