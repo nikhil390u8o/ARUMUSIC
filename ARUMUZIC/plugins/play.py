@@ -232,3 +232,4 @@ async def play_cmd(client, msg: Message):
             return await bot.send_message(chat_id, "❌ **Pehle Voice Chat start karo bhaya!**")
         config.queues[chat_id] = []
         await bot.send_message(chat_id, f"❌ **Error:** {e}")
+
