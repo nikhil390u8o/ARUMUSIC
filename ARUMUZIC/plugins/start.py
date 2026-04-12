@@ -51,7 +51,7 @@ async def start_cmd(client, msg: Message):
             InlineKeyboardButton("📂 ʀᴇᴘᴏ", callback_data="repo_menu")
         ],
         [
-            InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="https://t.me/ll_PANDA_BBY_ll"),
+            InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="tg://user?id=7450385463"),
             InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru") # Support link sahi kar di
         ],
         [
