@@ -49,7 +49,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("❓ ʜᴇʟᴘ", callback_data="help_menu"), InlineKeyboardButton("📂 ʀᴇᴘᴏ", callback_data="repo_menu")],
-            [InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="https://t.me/sxyaru"), InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")],
+            [InlineKeyboardButton("👤 ᴏᴡɴᴇʀ", url="tg://user?id=7450385463"), InlineKeyboardButton("📢 sᴜᴘᴘᴏʀᴛ", url="https://t.me/sxyaru")],
             [InlineKeyboardButton("➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ", url=f"https://t.me/{bot_me.username}?startgroup=true")]
         ])
         await query.message.edit_caption(caption=text, reply_markup=buttons)
